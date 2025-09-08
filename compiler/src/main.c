@@ -39,8 +39,17 @@ static void compile_to_c(const char* src, const char* out_path) {
 
         Token next = scan_token(&sc);
         if (next.type == T_ERROR) { free(code.data); exit(1); }
-        if (next.type != T_STRING) { print_error(&sc, "Expected string after print\n"); free(code.data); exit(1); }
-        buf_append_fmt(&code, "    printf(\"%.*s\\n\");\n", (int)next.as.str.len, next.as.str.ptr);
+        if (next.type == T_STRING) {
+            buf_append_fmt(&code, "    printf(\"%.*s\\n\");\n", (int)next.as.str.len, next.as.str.ptr);
+        }
+        else if (next.type == T_NUMBER) {
+            buf_append_fmt(&code, "    printf(\"%%d\\n\", %.*s);\n", (int)next.as.str.len, next.as.str.ptr);
+        }
+        else {
+            print_error(&sc, "Unexpected token after print. Expected string or number.\n");
+            free(code.data);
+            exit(1);
+        }
 
         Token end = scan_token(&sc);
         if (end.type == T_ERROR) { free(code.data); exit(1); }

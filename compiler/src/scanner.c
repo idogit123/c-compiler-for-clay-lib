@@ -7,6 +7,7 @@ static int is_at_end(Scanner* s) { return *s->current == '\0'; }
 static char advance(Scanner* s) { char c = *s->current; if (c) { s->current++; s->col++; } return c; }
 static char peek(Scanner* s) { return *s->current; }
 static void skip_spaces(Scanner* s) { while (isspace((unsigned char)peek(s)) && peek(s) != '\n') advance(s); }
+static int is_digit(char c) { return c >= '0' && c <= '9'; }
 
 static Token make_token(Scanner* s, TokenType type) {
     Token t;
@@ -28,6 +29,16 @@ void scanner_init(Scanner* s, const char* src) {
 static Token error_token(Scanner* s, const char* msg) {
     print_error(s, msg);
     return make_token(s, T_ERROR);
+}
+
+static Token number_token(Scanner* s) {
+    const char* start = s->current - 1; // first digit is already consumed
+    while (is_digit(peek(s))) advance(s);
+
+    Token t = make_token(s, T_NUMBER);
+    t.as.str.ptr = start;
+    t.as.str.len = (size_t)(s->current - start);
+    return t;
 }
 
 static Token string_token(Scanner* s) {
@@ -66,6 +77,8 @@ static Token identifier_or_keyword(Scanner* s) {
     return error_token(s, "Unknown identifier");
 }
 
+
+
 Token scan_token(Scanner* s) {
     skip_spaces(s);
     s->start = s->current;
@@ -75,6 +88,7 @@ Token scan_token(Scanner* s) {
     char c = advance(s);
     if (c == '\n') { s->line++; s->col = 1; return make_token(s, T_NEWLINE); }
     if (c == '"') return string_token(s);
+    if (is_digit(c)) return number_token(s);
     if (is_ident_start(c)) return identifier_or_keyword(s);
 
     return error_token(s, "Unexpected character");
