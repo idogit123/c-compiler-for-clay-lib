@@ -1,14 +1,32 @@
 {
 	"version": "2.0.0",
 	"tasks": [
-		{
-			"label": "build-compiler",
-			"type": "shell",
-			"command": "gcc compiler/src/*.c -I compiler/include -o compiler/compiler.exe -std=c99 -Wall -Werror",
-			"problemMatcher": [
-				"$gcc"
-			],
-			"group": "build"
-		}
-	]
+        {
+            "label": "build-compiler",
+            "type": "shell",
+            "command": "gcc compiler/src/*.c -I compiler/include -o compiler.exe -std=c99 -Wall -Werror",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "run-active-clay",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./.vscode/runActiveClay.ps1",
+                "${file}"
+            ],
+            "dependsOn": [
+                "build-compiler"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
 }

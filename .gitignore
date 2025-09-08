@@ -1,3 +1,4 @@
 *.exe
 *.clay
 *.clay.c
+.vscode/*
