@@ -3,6 +3,8 @@
 #include "buffer.h"
 #include "scanner.h"
 #include "error.h"
+#include "parser.h"
+#include "codegen.h"
 
 static char* read_entire_file(const char* path) {
     FILE* f = fopen(path, "rb");
@@ -23,47 +25,16 @@ static void compile_to_c(const char* src, const char* out_path) {
     Buffer code;
     buf_init(&code);
 
-    buf_append(&code, "#include <stdio.h>\n\nint main() {\n");
-
     Scanner sc; scanner_init(&sc, src);
-    for (;;) {
-        Token t = scan_token(&sc);
-        if (t.type == T_EOF) break;
-        if (t.type == T_ERROR) { free(code.data); exit(1); } // stop on error
-        if (t.type == T_NEWLINE) continue;
-        if (t.type != T_PRINT) {
-            print_error(&sc, "Expected 'print' statement");
-            free(code.data);
-            exit(1);
-        }
-
-        Token next = scan_token(&sc);
-        if (next.type == T_ERROR) { free(code.data); exit(1); }
-        if (next.type == T_STRING) {
-            buf_append_fmt(&code, "    printf(\"%.*s\\n\");\n", (int)next.as.str.len, next.as.str.ptr);
-        }
-        else if (next.type == T_FLOAT) {
-            buf_append_fmt(&code, "    printf(\"%%g\\n\", %.*s);\n", (int)next.as.str.len, next.as.str.ptr);
-        }
-        else if (next.type == T_INT) {
-            buf_append_fmt(&code, "    printf(\"%%d\\n\", %.*s);\n", (int)next.as.str.len, next.as.str.ptr);
-        }
-        else {
-            print_error(&sc, "Unexpected token after print. Expected string or number.\n");
-            free(code.data);
-            exit(1);
-        }
-
-        Token end = scan_token(&sc);
-        if (end.type == T_ERROR) { free(code.data); exit(1); }
-        if (end.type != T_NEWLINE && end.type != T_EOF) {
-            print_error(&sc, "Expected newline after print statement\n");
-            free(code.data);
-            exit(1);
-        }
+    int hadError = 0;
+    Program* prog = parse_program(&sc, &hadError);
+    if (hadError || !prog) {
+        free(code.data);
+        exit(1);
     }
 
-    buf_append(&code, "    return 0;\n}\n");
+    codegen_c_program(&code, prog);
+    ast_free_program(prog);
 
     FILE* out = fopen(out_path, "w");
     if (!out) {
