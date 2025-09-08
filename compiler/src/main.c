@@ -42,7 +42,10 @@ static void compile_to_c(const char* src, const char* out_path) {
         if (next.type == T_STRING) {
             buf_append_fmt(&code, "    printf(\"%.*s\\n\");\n", (int)next.as.str.len, next.as.str.ptr);
         }
-        else if (next.type == T_NUMBER) {
+        else if (next.type == T_FLOAT) {
+            buf_append_fmt(&code, "    printf(\"%%g\\n\", %.*s);\n", (int)next.as.str.len, next.as.str.ptr);
+        }
+        else if (next.type == T_INT) {
             buf_append_fmt(&code, "    printf(\"%%d\\n\", %.*s);\n", (int)next.as.str.len, next.as.str.ptr);
         }
         else {

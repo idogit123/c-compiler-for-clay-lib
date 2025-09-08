@@ -8,7 +8,7 @@ typedef struct {
     size_t len;
 } Slice;
 
-typedef enum { T_PRINT, T_STRING, T_NUMBER, T_NEWLINE, T_EOF, T_ERROR, T_THEN } TokenType;
+typedef enum { T_PRINT, T_STRING, T_INT, T_FLOAT, T_NEWLINE, T_EOF, T_ERROR, T_THEN } TokenType;
 
 typedef struct {
     const char* start;
@@ -20,7 +20,7 @@ typedef struct {
     TokenType type;
     Slice lexeme;
     union {
-        Slice str;    // only for T_STRING
+        Slice str;    // only for T_STRING and T_NUMBER
     } as;
     int line, col;
 } Token;

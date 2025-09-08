@@ -8,6 +8,9 @@ static char advance(Scanner* s) { char c = *s->current; if (c) { s->current++; s
 static char peek(Scanner* s) { return *s->current; }
 static void skip_spaces(Scanner* s) { while (isspace((unsigned char)peek(s)) && peek(s) != '\n') advance(s); }
 static int is_digit(char c) { return c >= '0' && c <= '9'; }
+static int is_digit_or_dot(char c) { return (c >= '0' && c <= '9') || c == '.'; }
+static int is_ident_start(char c) { return isalpha((unsigned char)c) || c == '_'; }
+static int is_ident(char c) { return isalnum((unsigned char)c) || c == '_'; }
 
 static Token make_token(Scanner* s, TokenType type) {
     Token t;
@@ -33,9 +36,19 @@ static Token error_token(Scanner* s, const char* msg) {
 
 static Token number_token(Scanner* s) {
     const char* start = s->current - 1; // first digit is already consumed
-    while (is_digit(peek(s))) advance(s);
+    int dot_count = 0;
+    while (is_digit_or_dot(peek(s))) {
+        if (peek(s) == '.') {
+            dot_count++;
+            if (dot_count > 1) {
+                advance(s); // to consume the extra dot and make error more accurate
+                return error_token(s, "Invalid number. Too many decimal points.");
+            }
+        }
+        advance(s);
+    }
 
-    Token t = make_token(s, T_NUMBER);
+    Token t = make_token(s, dot_count > 0 ? T_FLOAT : T_INT);
     t.as.str.ptr = start;
     t.as.str.len = (size_t)(s->current - start);
     return t;
@@ -60,9 +73,6 @@ static Token string_token(Scanner* s) {
     t.col = start_col - 1;
     return t;
 }
-
-static int is_ident_start(char c) { return isalpha((unsigned char)c) || c == '_'; }
-static int is_ident(char c) { return isalnum((unsigned char)c) || c == '_'; }
 
 static Token identifier_or_keyword(Scanner* s) {
     while (is_ident(peek(s))) advance(s);
