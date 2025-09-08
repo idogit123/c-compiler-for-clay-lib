@@ -8,7 +8,7 @@ typedef struct {
     size_t len;
 } Slice;
 
-typedef enum { T_PRINT, T_STRING, T_INT, T_FLOAT, T_NEWLINE, T_EOF, T_ERROR } TokenType;
+typedef enum { T_PRINT, T_STRING, T_INT, T_FLOAT, T_PLUS, T_NEWLINE, T_EOF, T_ERROR } TokenType;
 
 typedef struct {
     const char* start;

@@ -1,5 +1,28 @@
 #include "codegen.h"
 
+// Helpers
+static void buf_append_slice(Buffer* out, Slice s) {
+    buf_append_fmt(out, "%.*s", (int)s.len, s.ptr);
+}
+
+static void emit_expr_int(Buffer* out, const Expr* e) {
+    switch (e->kind) {
+        case EXPR_LIT: {
+            // Assume integer literal for now; let C handle implicit casts if floats slip through
+            buf_append_slice(out, e->as.literal.value);
+            return;
+        }
+        case EXPR_ADD: {
+            buf_append(out, "(");
+            emit_expr_int(out, e->as.add.left);
+            buf_append(out, " + ");
+            emit_expr_int(out, e->as.add.right);
+            buf_append(out, ")");
+            return;
+        }
+    }
+}
+
 static void emit_stmt(Buffer* out, const Stmt* s) {
     switch (s->kind) {
         case STMT_PRINT: {
@@ -17,6 +40,12 @@ static void emit_stmt(Buffer* out, const Stmt* s) {
                             buf_append_fmt(out, "    printf(\"%%g\\n\", %.*s);\n", (int)e->as.literal.value.len, e->as.literal.value.ptr);
                             break;
                     }
+                    break;
+                }
+                case EXPR_ADD: {
+                    buf_append(out, "    printf(\"%d\\n\", ");
+                    emit_expr_int(out, e);
+                    buf_append(out, ");\n");
                     break;
                 }
             }

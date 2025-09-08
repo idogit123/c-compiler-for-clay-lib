@@ -35,16 +35,35 @@ static Expr* parse_literal(Parser* p) {
             return ast_new_literal_expr(LIT_FLOAT, t.as.str, t.line, t.col);
         }
         default:
-            print_error(p->sc, "Expected a literal after 'print'");
+            print_error(p->sc, "Expected a literal after 'print'.");
             p->hadError = 1;
             return NULL;
     }
 }
 
+static Expr* parse_primary(Parser* p) {
+    return parse_literal(p);
+}
+
+// add -> primary ( "+" primary )*
+static Expr* parse_add(Parser* p) {
+    Expr* left = parse_primary(p);
+    if (p->hadError || !left) return left;
+
+    while (p->current.type == T_PLUS) {
+        Token op = p->current; // for line/col
+        advance_p(p); // consume '+'
+        Expr* right = parse_primary(p);
+        if (p->hadError || !right) { return left; }
+        left = ast_new_add_expr(left, right, op.line, op.col);
+    }
+    return left;
+}
+
 static Stmt* parse_print(Parser* p) {
     Token kw = p->current; // currently at T_PRINT
     advance_p(p); // consume 'print'
-    Expr* e = parse_literal(p);
+    Expr* e = parse_add(p);
     if (p->hadError) return NULL;
 
     // Accept NEWLINE or EOF immediately following

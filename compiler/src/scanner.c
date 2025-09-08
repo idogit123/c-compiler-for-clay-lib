@@ -95,6 +95,7 @@ Token scan_token(Scanner* s) {
     char c = advance(s);
     if (c == '\n') { s->line++; s->col = 1; return make_token(s, T_NEWLINE); }
     if (c == '"') return string_token(s);
+    if (c == '+') return make_token(s, T_PLUS);
     if (is_digit(c)) return number_token(s);
     if (is_ident_start(c)) return identifier_or_keyword(s);
 

@@ -45,9 +45,26 @@ Stmt* ast_new_print_stmt(Expr* expr, int line, int col) {
     return s;
 }
 
+Expr* ast_new_add_expr(Expr* left, Expr* right, int line, int col) {
+    Expr* e = (Expr*)xmalloc(sizeof(Expr));
+    e->kind = EXPR_ADD;
+    e->line = line;
+    e->col = col;
+    e->as.add.left = left;
+    e->as.add.right = right;
+    return e;
+}
+
 static void ast_free_expr(Expr* e) {
     if (!e) return;
-    // Literal has no heap children
+    switch (e->kind) {
+        case EXPR_ADD:
+            ast_free_expr(e->as.add.left);
+            ast_free_expr(e->as.add.right);
+            break;
+        default:
+            break;
+    }
     free(e);
 }
 
