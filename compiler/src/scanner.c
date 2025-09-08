@@ -81,9 +81,6 @@ static Token identifier_or_keyword(Scanner* s) {
     if (len == 5 && memcmp(s->start, "print", 5) == 0) {
         return make_token(s, T_PRINT);
     }
-    else if (len == 4 && memcmp(s->start, "then", 4) == 0) {
-        return make_token(s, T_THEN);
-    }
     return error_token(s, "Unknown identifier");
 }
 

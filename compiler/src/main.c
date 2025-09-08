@@ -56,7 +56,7 @@ static void compile_to_c(const char* src, const char* out_path) {
 
         Token end = scan_token(&sc);
         if (end.type == T_ERROR) { free(code.data); exit(1); }
-        if (end.type != T_NEWLINE && end.type != T_EOF && end.type != T_THEN) {
+        if (end.type != T_NEWLINE && end.type != T_EOF) {
             print_error(&sc, "Expected newline after print statement\n");
             free(code.data);
             exit(1);
